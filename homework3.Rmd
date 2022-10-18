@@ -1,0 +1,61 @@
+---
+title: "README"
+author: "Xinkai Shen"
+date: "10/18/2022"
+output: rmarkdown::github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(nycflights13)
+library(ggplot2)
+library(sjmisc)
+```
+
+## q1
+
+```{r}
+flights %>%
+  group_by(dest) %>%
+  summarise(delay = mean(arr_delay, na.rm = T)) %>%
+  inner_join(airports, c("dest" = "faa")) %>%
+  ggplot(aes(lon, lat, size = delay)) +
+    borders("state") +
+    geom_point() +
+    coord_quickmap()
+```
+
+## q2
+
+```{r}
+loc = airports %>%
+  select(faa, lat, lon)
+
+flights %>%
+  select(year:day, hour, origin, dest) %>%
+  left_join(loc, by = c("origin" = "faa")) %>%
+  left_join(loc, by = c("dest" = "faa"))
+```
+
+## q3
+
+```{r}
+qu3 = flights %>%
+  inner_join( planes %>%
+    mutate(year_old =  year) %>%
+    select(tailnum,year_old) , c(tailnum = "tailnum")) %>%
+  mutate(year_old = year - year_old ) %>%
+  group_by(year_old) %>%
+  summarise(delay_arr = mean(arr_delay, na.rm = T), delay_dep = mean(dep_delay, na.rm = T))
+
+qu3 %>%
+  ggplot(aes(x = year_old, y = delay_arr)) +
+    geom_point() +
+    labs(x = 'Plane Age', y = 'Average arrival delay' )
+
+qu3 %>%
+  ggplot(aes(x = year_old, y = delay_dep)) +
+    geom_point() +
+    labs(x = 'Plane Age', y = 'Average departure delay' )
+```
